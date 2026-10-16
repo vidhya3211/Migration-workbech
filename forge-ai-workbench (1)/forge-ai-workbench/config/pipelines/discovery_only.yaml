@@ -1,0 +1,9 @@
+# Discovery-only assessment: read the estate, recover and certify the rules, publish them to the assistant.
+# Useful for a first look at a new system before any data extracts are available.
+name: discovery_only
+version: 1
+description: Discovery and rule certification only (no data quality, reconciliation or conduct)
+phases:
+  - steps: [self_test, ingest, cartographer, stage_data, extract, guard, normaliser, differential, adjudication]
+  - steps: ["gate:rule_adjudication", certified_core]
+  - steps: [story, retrieval, assurance, "gate:go_no_go", finalize]

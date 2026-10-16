@@ -1,0 +1,57 @@
+{
+ "description": "Reviewed disagreements between the source and target logic in the sample estate.",
+ "expected": [
+  {
+   "canonical_name": "ADMIN_FEE",
+   "type": "value_mismatch",
+   "critical": true,
+   "exposure": "5"
+  },
+  {
+   "canonical_name": "RISK_FACTOR",
+   "type": "condition_mismatch",
+   "critical": true,
+   "divergent_input": {
+    "HOLDER_AGE": "60"
+   }
+  },
+  {
+   "canonical_name": "SURRENDER_VALUE",
+   "type": "expression_mismatch",
+   "critical": true,
+   "exposure": "50"
+  },
+  {
+   "canonical_name": "TERMINAL_BONUS",
+   "type": "missing_in_target",
+   "critical": true
+  },
+  {
+   "canonical_name": "TERM_FACTOR",
+   "type": "condition_mismatch",
+   "critical": false
+  },
+  {
+   "canonical_name": "BASE_PREMIUM",
+   "type": "expression_mismatch",
+   "critical": false
+  },
+  {
+   "canonical_name": "MONTHLY_PREMIUM",
+   "type": "document_conflict",
+   "critical": false
+  }
+ ],
+ "must_not_flag": [
+  "SMOKER_LOADING",
+  "AGE_LOAD_THRESHOLD",
+  "AGE_LOAD_FACTOR",
+  "MINIMUM_SURRENDER",
+  "PENALTY_AMOUNT",
+  "ANNUAL_PREMIUM",
+  "ANNUAL_DISCOUNT_RATE",
+  "PENALTY_RATE",
+  "DISCOUNT",
+  "ROUNDING_PRECISION"
+ ]
+}

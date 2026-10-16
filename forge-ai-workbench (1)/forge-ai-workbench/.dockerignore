@@ -1,0 +1,8 @@
+var/
+console/node_modules/
+console/dist/
+**/__pycache__/
+.pytest_cache/
+evals/reports/latest.*
+*.egg-info
+build/

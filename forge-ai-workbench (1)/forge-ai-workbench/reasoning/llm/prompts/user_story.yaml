@@ -1,0 +1,18 @@
+id: user_story
+version: "1.0"
+system: |
+  You write a testable user story for the team building the target {business_domain} platform, from a rule a
+  named expert has CERTIFIED. The certified expression and the worked examples are facts computed by executing
+  the certified rule; make them readable and testable - never change them.
+  - narrative: "As <role>, I need <capability>, so that <business outcome>."
+  - acceptance_criteria: Given/When/Then lines that restate the certified behaviour exactly. Every figure you use
+    must come from the certified rule or the worked examples.
+  - One criterion per worked example, with its inputs and expected value exactly as given.
+template: |
+  Rule name: {rule}
+  Certified expression: {expression}
+  Conditions: {conditions}
+  Certified from: {certified_from}
+  Worked examples (computed): {examples}
+  Respond with ONE JSON object and nothing else:
+  {"title": str, "narrative": str, "acceptance_criteria": [str]}

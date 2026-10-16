@@ -1,0 +1,454 @@
+{
+ "description": "Rules a reviewer confirmed must be extracted, with exact kind and locator. Precision is scored only within 'scope'.",
+ "scope": [
+  "cobol/POLREC.cpy",
+  "cobol/PREMCALC.cbl",
+  "cobol/SURRVAL.cbl",
+  "docs/LTA_Product_Guide.md",
+  "integro/PremiumCalculator.php",
+  "integro/SurrenderValue.php",
+  "landing/ADMFEE_20240101.txt",
+  "landing/NIGHTLY.jcl",
+  "plsql/PKG_BONUS.pkb"
+ ],
+ "expected": [
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "ACTIVE",
+   "line": "7"
+  },
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "LAPSED",
+   "line": "8"
+  },
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "PAID_UP",
+   "line": "9"
+  },
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "SMOKER",
+   "line": "11"
+  },
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "PAY_ANNUAL",
+   "line": "13"
+  },
+  {
+   "file": "cobol/POLREC.cpy",
+   "kind": "condition_name",
+   "canonical_name": "PAY_MONTHLY",
+   "line": "14"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "constant",
+   "canonical_name": "ADMIN_FEE",
+   "line": "13"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "constant",
+   "canonical_name": "SMOKER_LOADING",
+   "line": "14"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "constant",
+   "canonical_name": "AGE_LOAD_THRESHOLD",
+   "line": "15"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "constant",
+   "canonical_name": "AGE_LOAD_FACTOR",
+   "line": "16"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "constant",
+   "canonical_name": "ANNUAL_DISCOUNT_RATE",
+   "line": "17"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "assignment",
+   "canonical_name": "RISK_FACTOR",
+   "line": "33"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "RISK_FACTOR",
+   "line": "41"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "RISK_FACTOR",
+   "line": "44"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "50"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "52"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "54"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "BASE_PREMIUM",
+   "line": "56"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "MONTHLY_PREMIUM",
+   "line": "59"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "ANNUAL_PREMIUM",
+   "line": "61"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "DISCOUNT",
+   "line": "65"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "calculation",
+   "canonical_name": "ANNUAL_PREMIUM",
+   "line": "67"
+  },
+  {
+   "file": "cobol/PREMCALC.cbl",
+   "kind": "assignment",
+   "canonical_name": "DISCOUNT",
+   "line": "69"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "constant",
+   "canonical_name": "MINIMUM_SURRENDER",
+   "line": "12"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "constant",
+   "canonical_name": "EXIT_FEE",
+   "line": "13"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "assignment",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "17"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "assignment",
+   "canonical_name": "PENALTY_RATE",
+   "line": "26"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "assignment",
+   "canonical_name": "PENALTY_RATE",
+   "line": "28"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "assignment",
+   "canonical_name": "PENALTY_RATE",
+   "line": "30"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "calculation",
+   "canonical_name": "PENALTY_AMOUNT",
+   "line": "33"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "calculation",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "35"
+  },
+  {
+   "file": "cobol/SURRVAL.cbl",
+   "kind": "assignment",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "39"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "MONTHLY_ADMINISTRATION_CHARGE",
+   "line": "4"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "AGE_LOAD_FACTOR",
+   "line": "5"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "AGE_LOADING_THRESHOLD",
+   "line": "5"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "SMOKER_LOADING",
+   "line": "6"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "PENALTY_RATE",
+   "line": "9"
+  },
+  {
+   "file": "docs/LTA_Product_Guide.md",
+   "kind": "assertion",
+   "canonical_name": "EXIT_FEE",
+   "line": "10"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "ADMIN_FEE",
+   "line": "11"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "SMOKER_LOADING",
+   "line": "12"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "AGE_LOAD_THRESHOLD",
+   "line": "13"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "AGE_LOAD_FACTOR",
+   "line": "14"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "ANNUAL_DISCOUNT_RATE",
+   "line": "15"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "constant",
+   "canonical_name": "ROUNDING_PRECISION",
+   "line": "17"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "assignment",
+   "canonical_name": "RISK_FACTOR",
+   "line": "21"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "RISK_FACTOR",
+   "line": "23"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "RISK_FACTOR",
+   "line": "27"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "35"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "37"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "assignment",
+   "canonical_name": "TERM_FACTOR",
+   "line": "39"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "BASE_PREMIUM",
+   "line": "46"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "MONTHLY_PREMIUM",
+   "line": "48"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "ANNUAL_PREMIUM",
+   "line": "54"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "DISCOUNT",
+   "line": "57"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "calculation",
+   "canonical_name": "ANNUAL_PREMIUM",
+   "line": "58"
+  },
+  {
+   "file": "integro/PremiumCalculator.php",
+   "kind": "assignment",
+   "canonical_name": "DISCOUNT",
+   "line": "62"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "constant",
+   "canonical_name": "MINIMUM_SURRENDER",
+   "line": "5"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "calculation",
+   "canonical_name": "PENALTY_RATE",
+   "line": "11"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "assignment",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "21"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "calculation",
+   "canonical_name": "PENALTY_AMOUNT",
+   "line": "23"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "calculation",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "24"
+  },
+  {
+   "file": "integro/SurrenderValue.php",
+   "kind": "assignment",
+   "canonical_name": "SURRENDER_VALUE",
+   "line": "26"
+  },
+  {
+   "file": "landing/ADMFEE_20240101.txt",
+   "kind": "assignment",
+   "canonical_name": "ADMIN_FEE",
+   "line": "12"
+  },
+  {
+   "file": "landing/ADMFEE_20240101.txt",
+   "kind": "assignment",
+   "canonical_name": "ADMIN_FEE",
+   "line": "14"
+  },
+  {
+   "file": "landing/NIGHTLY.jcl",
+   "kind": "schedule",
+   "canonical_name": "LTANIGHT_STEP010",
+   "line": "2"
+  },
+  {
+   "file": "landing/NIGHTLY.jcl",
+   "kind": "schedule",
+   "canonical_name": "LTANIGHT_STEP020",
+   "line": "4"
+  },
+  {
+   "file": "plsql/PKG_BONUS.pkb",
+   "kind": "constant",
+   "canonical_name": "TERMINAL_RATE",
+   "line": "2"
+  },
+  {
+   "file": "plsql/PKG_BONUS.pkb",
+   "kind": "constant",
+   "canonical_name": "LOYALTY_YEARS",
+   "line": "3"
+  },
+  {
+   "file": "plsql/PKG_BONUS.pkb",
+   "kind": "calculation",
+   "canonical_name": "TERMINAL_BONUS_RATE",
+   "line": "12"
+  },
+  {
+   "file": "plsql/PKG_BONUS.pkb",
+   "kind": "assignment",
+   "canonical_name": "TERMINAL_BONUS_RATE",
+   "line": "14"
+  },
+  {
+   "file": "plsql/PKG_BONUS.pkb",
+   "kind": "calculation",
+   "canonical_name": "TERMINAL_BONUS",
+   "line": "16"
+  },
+  {
+   "file": "spreadsheets/LTA_Rates.xlsx",
+   "kind": "constant",
+   "canonical_name": "MONTHLY_ADMIN_FEE",
+   "line": "B4"
+  },
+  {
+   "file": "spreadsheets/LTA_Rates.xlsx",
+   "kind": "calculation",
+   "canonical_name": "MONTHLY_PREMIUM",
+   "line": "B6"
+  }
+ ]
+}

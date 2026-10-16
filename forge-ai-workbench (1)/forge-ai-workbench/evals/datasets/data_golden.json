@@ -1,0 +1,122 @@
+{
+ "description": "Reviewed data-quality and reconciliation outcomes for the sample extracts.",
+ "cohorts": [
+  {
+   "entity": "POLICY",
+   "column": "POL_STATUS",
+   "defect_code": "invalid_code",
+   "records": [
+    "P000000009"
+   ],
+   "root_cause": "RC-CODE-DRIFT"
+  },
+  {
+   "entity": "POLICY",
+   "column": "START_DT",
+   "defect_code": "sentinel_value",
+   "records": [
+    "P000000009"
+   ],
+   "root_cause": "RC-LEGACY-DEFAULT"
+  }
+ ],
+ "entity_matches": [
+  [
+   "C000000010",
+   "C000000012"
+  ]
+ ],
+ "breaks": [
+  {
+   "record_key": "P000000001",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000002",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000003",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000004",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000005",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000006",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000008",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000009",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000010",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000011",
+   "field": "monthly_premium",
+   "delta": "5.00"
+  },
+  {
+   "record_key": "P000000007",
+   "field": "monthly_premium",
+   "delta": "-1.46"
+  },
+  {
+   "record_key": "P000000009",
+   "field": "commencement_date",
+   "delta": null
+  },
+  {
+   "record_key": "P000000012",
+   "field": "policy_ref",
+   "type": "missing_in_target"
+  },
+  {
+   "record_key": "C000000012",
+   "field": "party_id",
+   "type": "missing_in_target"
+  }
+ ],
+ "cluster_causes": {
+  "lta_policy.monthly_premium:value_mismatch:5.00": [
+   "ADMIN_FEE"
+  ],
+  "lta_policy.monthly_premium:value_mismatch:-1.46": [
+   "ADMIN_FEE",
+   "RISK_FACTOR"
+  ]
+ },
+ "conduct_overcharge_records": [
+  "P000000001",
+  "P000000002",
+  "P000000003",
+  "P000000004",
+  "P000000005",
+  "P000000006",
+  "P000000008",
+  "P000000009",
+  "P000000010",
+  "P000000011"
+ ]
+}

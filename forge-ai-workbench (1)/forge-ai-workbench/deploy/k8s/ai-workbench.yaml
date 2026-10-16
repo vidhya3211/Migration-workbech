@@ -1,0 +1,120 @@
+# AI Workbench on AKS (alternative to the Container Apps deployment in infra/main.bicep): API, job worker and a
+# migration Job, all with Entra workload identity - no secrets in the pod spec; Key Vault secrets are synced
+# by the Secrets Store CSI driver into the ai-workbench-kv-secrets Secret (SecretProviderClass per environment).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-workbench
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-workbench
+  namespace: ai-workbench
+  annotations:
+    azure.workload.identity/client-id: "${WORKLOAD_IDENTITY_CLIENT_ID}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: ai-workbench-env, namespace: ai-workbench}
+data:
+  AIWB__ENVIRONMENT: production
+  AIWB__STORAGE__DATABASE_URL: "postgresql+psycopg://${WORKLOAD_IDENTITY_NAME}@${PG_HOST}:5432/aiwb?sslmode=require"
+  AIWB__STORAGE__ENTRA_AUTH: "true"
+  AIWB__STORAGE__AUTO_MIGRATE: "false"
+  AIWB__STORAGE__OBJECT_STORE: azure_blob
+  AIWB__STORAGE__BLOB_ACCOUNT_URL: "${BLOB_ACCOUNT_URL}"
+  AIWB__JOBS__BACKEND: service_bus
+  AIWB__JOBS__EMBEDDED_WORKER: "false"
+  AIWB__JOBS__SERVICE_BUS_NAMESPACE: "${SERVICE_BUS_NAMESPACE}"
+  AIWB__OBSERVABILITY__OTEL_ENABLED: "true"
+---
+apiVersion: batch/v1
+kind: Job
+metadata: {name: "ai-workbench-migrate-${IMAGE_TAG}", namespace: ai-workbench}
+spec:
+  backoffLimit: 1
+  template:
+    metadata: {labels: {azure.workload.identity/use: "true"}}
+    spec:
+      serviceAccountName: ai-workbench
+      restartPolicy: Never
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: migrate
+          image: "${ACR}/ai-workbench-api:${IMAGE_TAG}"
+          command: ["python", "cli.py", "migrate"]
+          envFrom: [{configMapRef: {name: ai-workbench-env}}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: ai-workbench-api, namespace: ai-workbench}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: ai-workbench-api}}
+  template:
+    metadata:
+      labels: {app: ai-workbench-api, azure.workload.identity/use: "true"}
+    spec:
+      serviceAccountName: ai-workbench
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: api
+          image: "${ACR}/ai-workbench-api:${IMAGE_TAG}"
+          ports: [{containerPort: 8000}]
+          envFrom: [{configMapRef: {name: ai-workbench-env}}]
+          env:
+            - {name: APPLICATIONINSIGHTS_CONNECTION_STRING, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: appinsights}}}
+            - {name: AIWB_ADMIN_PASSWORD_HASH, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: admin-password-hash}}}
+            - {name: AIWB_AUTH_SIGNING_KEY, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: auth-signing-key}}}
+            - {name: AIWB_PII_HMAC_KEY, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: pii-hmac-key}}}
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+          resources:
+            requests: {cpu: "500m", memory: 1Gi}
+            limits: {cpu: "2", memory: 4Gi}
+          readinessProbe: {httpGet: {path: /v1/health, port: 8000}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /v1/health, port: 8000}, periodSeconds: 30}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: ai-workbench-worker, namespace: ai-workbench}
+spec:
+  replicas: 1              # scale with a KEDA ScaledObject on the Service Bus queue (azure-servicebus trigger)
+  selector: {matchLabels: {app: ai-workbench-worker}}
+  template:
+    metadata:
+      labels: {app: ai-workbench-worker, azure.workload.identity/use: "true"}
+    spec:
+      serviceAccountName: ai-workbench
+      terminationGracePeriodSeconds: 300
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: worker
+          image: "${ACR}/ai-workbench-api:${IMAGE_TAG}"
+          command: ["python", "cli.py", "worker"]
+          envFrom: [{configMapRef: {name: ai-workbench-env}}]
+          env:
+            - {name: APPLICATIONINSIGHTS_CONNECTION_STRING, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: appinsights}}}
+            - {name: AIWB_ADMIN_PASSWORD_HASH, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: admin-password-hash}}}
+            - {name: AIWB_AUTH_SIGNING_KEY, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: auth-signing-key}}}
+            - {name: AIWB_PII_HMAC_KEY, valueFrom: {secretKeyRef: {name: ai-workbench-kv-secrets, key: pii-hmac-key}}}
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+          resources:
+            requests: {cpu: "2", memory: 8Gi, ephemeral-storage: 20Gi}
+            limits: {cpu: "4", memory: 16Gi, ephemeral-storage: 80Gi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: ai-workbench-api, namespace: ai-workbench}
+spec:
+  selector: {app: ai-workbench-api}
+  ports: [{port: 80, targetPort: 8000}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: ai-workbench-api-ingress, namespace: ai-workbench}
+spec:
+  podSelector: {matchLabels: {app: ai-workbench-api}}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress}}}]

@@ -1,0 +1,129 @@
+# Continuous evaluation: unit tests -> agent/graph/API tests (PostgreSQL) -> golden datasets + evals -> release
+# gate -> images -> migrate job -> Container Apps rollout. Any failed gate blocks deployment.
+trigger:
+  branches: {include: [main]}
+pr:
+  branches: {include: [main]}
+
+variables:
+  pythonVersion: '3.12'
+  workdir: ai-workbench
+  # the tests create and drop one database per workspace on this server
+  AIWB_TEST_DATABASE_URL: postgresql+psycopg://postgres:ci-only@localhost:5432/postgres
+  AIWB_ADMIN_PASSWORD: ci-only-admin-password
+  AIWB_AUTH_SIGNING_KEY: ci-only-signing-key-0123456789abcdef
+  AIWB_PII_HMAC_KEY: ci-only-hmac-key-0123456789abcdef
+
+resources:
+  containers:
+    - container: postgres
+      image: pgvector/pgvector:pg16
+      env: {POSTGRES_PASSWORD: ci-only}
+      ports: ["5432:5432"]
+
+stages:
+  - stage: Test
+    jobs:
+      - job: unit_and_agent_tests
+        pool: {vmImage: ubuntu-latest}
+        timeoutInMinutes: 60
+        services: {postgres: postgres}
+        steps:
+          - task: UsePythonVersion@0
+            inputs: {versionSpec: $(pythonVersion)}
+          - script: pip install -e ".[headroom,mcp,dev]"
+            workingDirectory: $(workdir)
+            displayName: Install
+          - script: python -m pytest -q tests/test_control_plane.py tests/test_deterministic.py tests/test_parsers.py tests/test_reasoning.py tests/test_mainframe.py tests/test_registry.py
+            workingDirectory: $(workdir)
+            displayName: Unit tests (control plane, deterministic engine, parsers, mainframe, registries)
+          - script: python -m pytest -q tests/test_platform_controls.py tests/test_jobs.py tests/test_retrieval.py tests/test_llm_agents.py tests/test_pipeline.py tests/test_api.py
+            workingDirectory: $(workdir)
+            displayName: Agent, graph, LLM-agent, guardrail, retrieval, job and API contract tests (PostgreSQL)
+          - script: |
+              python - <<'PY'
+              from evals.harness import create_database, drop_database
+              import subprocess, os
+              url = create_database("aiwb_drift")
+              env = {**os.environ, "AIWB__STORAGE__DATABASE_URL": url}
+              try:
+                  subprocess.run(["python", "cli.py", "migrate"], check=True, env=env)
+                  subprocess.run(["python", "-m", "alembic", "check"], check=True, env=env)
+              finally:
+                  drop_database("aiwb_drift")
+              PY
+            workingDirectory: $(workdir)
+            displayName: Schema drift check (ORM vs migrations)
+
+  - stage: Evaluate
+    dependsOn: Test
+    jobs:
+      - job: golden_capability_regression_security_cost
+        pool: {vmImage: ubuntu-latest}
+        services: {postgres: postgres}
+        steps:
+          - task: UsePythonVersion@0
+            inputs: {versionSpec: $(pythonVersion)}
+          - script: pip install -e ".[headroom,mcp,dev]"
+            workingDirectory: $(workdir)
+          - script: python -m evals.run_all
+            workingDirectory: $(workdir)
+            displayName: Golden datasets + capability evals + regression + guardrail + compression + cost gate
+          - task: PublishPipelineArtifact@1
+            condition: always()
+            inputs: {targetPath: $(workdir)/evals/reports, artifact: eval-report}
+
+  - stage: Build
+    dependsOn: Evaluate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: images
+        pool: {vmImage: ubuntu-latest}
+        steps:
+          - script: cd $(workdir)/console && npm ci && npm run gen:api && npm run typecheck && npm run build
+            displayName: Console (types generated from api/openapi.yaml)
+          - task: AzureCLI@2
+            displayName: Build and push images (ACR, workload identity federation)
+            inputs:
+              azureSubscription: aiwb-$(env)-federated
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr build -r $(acrName) -t ai-workbench-api:$(Build.SourceVersion) $(workdir)
+                az acr build -r $(acrName) -t ai-workbench-console:$(Build.SourceVersion) -f $(workdir)/console/Dockerfile $(workdir)
+
+  - stage: Deploy
+    dependsOn: Build
+    jobs:
+      - deployment: container_apps
+        environment: aiwb-$(env)          # approvals + checks configured on the environment
+        pool: {vmImage: ubuntu-latest}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: Infrastructure, migrations, then api / worker / console rollout
+                  inputs:
+                    azureSubscription: aiwb-$(env)-federated
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az deployment group create -g $(resourceGroup) -f $(workdir)/infra/main.bicep \
+                        -p env=$(env) imageTag=$(Build.SourceVersion) \
+                           pgAdminGroupObjectId=$(pgAdminGroupObjectId) pgAdminGroupName="$(pgAdminGroupName)"
+                      job=aiwb-$(env)-migrate
+                      exe=$(az containerapp job start -g $(resourceGroup) -n $job --query name -o tsv)
+                      for i in $(seq 1 90); do
+                        st=$(az containerapp job execution show -g $(resourceGroup) -n $job --job-execution-name $exe --query properties.status -o tsv)
+                        [ "$st" = "Succeeded" ] && break
+                        [ "$st" = "Failed" ] && { echo "migration failed"; exit 1; }
+                        sleep 20
+                      done
+                      [ "$st" = "Succeeded" ] || { echo "migration timed out"; exit 1; }
+                      for app in api worker; do
+                        az containerapp update -g $(resourceGroup) -n aiwb-$(env)-$app --image $(acrName).azurecr.io/ai-workbench-api:$(Build.SourceVersion)
+                      done
+                      az containerapp update -g $(resourceGroup) -n aiwb-$(env)-console --image $(acrName).azurecr.io/ai-workbench-console:$(Build.SourceVersion)

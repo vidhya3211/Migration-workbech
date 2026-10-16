@@ -1,0 +1,134 @@
+{
+ "description": "Reviewed attribute mappings. POLICY.LAST_PREM_DT has no target and must stay unmapped.",
+ "expected": [
+  {
+   "source_entity": "POLICY",
+   "source_field": "POL_NUMBER",
+   "target_entity": "lta_policy",
+   "target_field": "policy_ref",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "POL_STATUS",
+   "target_entity": "lta_policy",
+   "target_field": "status_code",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "SMOKER_FLAG",
+   "target_entity": "lta_policy",
+   "target_field": "is_smoker",
+   "transformation": "code_map"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "PAY_FREQ",
+   "target_entity": "lta_policy",
+   "target_field": "payment_frequency",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "HOLDER_AGE",
+   "target_entity": "lta_policy",
+   "target_field": "holder_age",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "TERM_YEARS",
+   "target_entity": "lta_policy",
+   "target_field": "term_years",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "SUM_ASSURED",
+   "target_entity": "lta_policy",
+   "target_field": "sum_assured",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "BASE_RATE",
+   "target_entity": "lta_policy",
+   "target_field": "base_rate",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "FUND_VALUE",
+   "target_entity": "lta_policy",
+   "target_field": "fund_value",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "YEARS_IN_FORCE",
+   "target_entity": "lta_policy",
+   "target_field": "years_in_force",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "MONTHLY_PREMIUM",
+   "target_entity": "lta_policy",
+   "target_field": "monthly_premium",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "CUST_ID",
+   "target_entity": "lta_policy",
+   "target_field": "party_id",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "POLICY",
+   "source_field": "START_DT",
+   "target_entity": "lta_policy",
+   "target_field": "commencement_date",
+   "transformation": "date_format"
+  },
+  {
+   "source_entity": "CUSTOMER",
+   "source_field": "CUST_ID",
+   "target_entity": "party",
+   "target_field": "party_id",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "CUSTOMER",
+   "source_field": "CUST_NAME",
+   "target_entity": "party",
+   "target_field": "full_name",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "CUSTOMER",
+   "source_field": "DOB",
+   "target_entity": "party",
+   "target_field": "party_birth_dt",
+   "transformation": "date_format"
+  },
+  {
+   "source_entity": "CUSTOMER",
+   "source_field": "POSTCODE",
+   "target_entity": "party",
+   "target_field": "post_code",
+   "transformation": "direct"
+  },
+  {
+   "source_entity": "CUSTOMER",
+   "source_field": "NI_NUMBER",
+   "target_entity": "party",
+   "target_field": "ni_number",
+   "transformation": "direct"
+  }
+ ],
+ "unmapped": [
+  "POLICY.LAST_PREM_DT"
+ ]
+}

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["cli"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "api*", "blackboard*", "config*", "context*", "db*", "evals*", "graph*", "guardrails*",
+           "ingestion*", "observability*", "reasoning*", "retrieval*", "schemas*", "services*", "staging*",
+           "storage*", "tools*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.json", "*.mako", "*.sql", "*.ini"]
+
+[project]
+name = "ai-workbench"
+version = "0.2.0"
+description = "AI Workbench - governed agentic migration-assurance platform"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=1.0",
+    "langgraph-checkpoint-postgres>=2.0",
+    "psycopg[binary]>=3.2",
+    "psycopg-pool>=3.2",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "python-multipart>=0.0.9",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "httpx>=0.27",
+    "openpyxl>=3.1",
+    "pypdf>=4.0",
+    "pyyaml>=6.0",
+    "opentelemetry-api>=1.25",
+    "opentelemetry-sdk>=1.25",
+    "pyjwt[crypto]>=2.8",
+]
+
+[project.optional-dependencies]
+headroom = ["headroom-ai>=0.38"]
+mcp = ["mcp>=1.0"]
+azure = ["azure-identity>=1.16", "azure-monitor-opentelemetry-exporter>=1.0b30", "azure-storage-blob>=12.20",
+         "azure-servicebus>=7.12"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+aiwb = "cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]

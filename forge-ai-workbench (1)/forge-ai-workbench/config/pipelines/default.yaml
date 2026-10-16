@@ -1,0 +1,26 @@
+# Default migration-assurance pipeline.
+#
+# The orchestration graph of every run is compiled from a pipeline definition like this one - no agent or step
+# order is hardcoded. A project chooses a pipeline by name and may disable optional steps
+# (project.pipeline = {"name": "default", "disabled_steps": ["story", "codegen"]}); required steps (control
+# plane self-test, ingest, classification, finalize) cannot be disabled. A run keeps a snapshot of the exact
+# definition it started with, so a run waiting at a human gate resumes on the same graph.
+#
+# phases run in order; a phase is either
+#   steps:    [a, b, c]               - sequential
+#   parallel: [[a, b], [c], [d, e]]   - lanes run concurrently; the next phase waits for every lane
+# "gate:<name>" is a durable human checkpoint (LangGraph interrupt); "extract" fans out one task per artefact.
+name: default
+version: 1
+description: Discovery -> certified core -> mapping & data quality -> reconciliation -> conduct -> go/no-go
+phases:
+  - steps: [self_test, ingest, cartographer, stage_data, extract, guard, normaliser, differential, adjudication]
+  - steps: ["gate:rule_adjudication", certified_core]
+  - parallel:
+      - [story]
+      - [mapping, validation]
+      - [profiler, anomaly, root_cause, cleansing, live_archive, entity_match]
+  - steps: ["gate:mapping_approval", "gate:data_quality_review", codegen]
+  - steps: [reconciler, controls, break_cluster, lineage, "gate:reconciliation_review"]
+  - steps: [outcome, case_routing, "gate:conduct_review"]
+  - steps: [retrieval, assurance, "gate:go_no_go", finalize]

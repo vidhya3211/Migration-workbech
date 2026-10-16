@@ -1,0 +1,16 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. ADMFEE.
+      * Landed over SFTP with a .txt extension - cartographer must
+      * still recognise it as a COBOL program.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WS-FEE-BAND            PIC X.
+       01  WS-ADMIN-FEE           PIC 9(3)V99.
+       PROCEDURE DIVISION.
+       MAIN-PARA.
+           IF WS-FEE-BAND = 'P'
+               MOVE 15.00 TO WS-ADMIN-FEE
+           ELSE
+               MOVE 25.00 TO WS-ADMIN-FEE
+           END-IF
+           STOP RUN.

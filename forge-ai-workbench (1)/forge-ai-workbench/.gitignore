@@ -1,0 +1,24 @@
+# runtime state (knowledge core, checkpoints, evidence store, uploads) - never committed
+var/
+*.db
+*.db-wal
+*.db-shm
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# console
+console/node_modules/
+console/dist/
+
+# evaluation outputs (the accepted baseline IS committed)
+evals/reports/latest.json
+evals/reports/latest.md
+
+# local secrets
+.env

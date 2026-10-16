@@ -1,0 +1,96 @@
+{
+ "assistant": {
+  "answer_rate": 1.0,
+  "citation_accuracy": 1.0,
+  "grounding": 1.0,
+  "refusal_accuracy": 1.0
+ },
+ "ats": {
+  "branches_per_case": 4.75,
+  "coverage": 0.4737,
+  "discovery_rate": 1.0,
+  "max_depth": 3.0,
+  "mean_latency_ms": 0.43,
+  "unnecessary_branch_ratio": 0.1579
+ },
+ "compression": {
+  "compression_ratio": 0.7352,
+  "evidence_preservation": 1.0,
+  "latency_ms": 662.7,
+  "protected_integrity": 1.0,
+  "quality_drop": 0.0,
+  "retrievable": 1.0,
+  "tokens_after": 7275.0,
+  "tokens_before": 27471.0
+ },
+ "differentials": {
+  "boundary_detection": 1.0,
+  "critical_recall": 1.0,
+  "exposure_accuracy": 1.0,
+  "precision": 1.0,
+  "proven_share": 1.0,
+  "recall": 1.0,
+  "type_accuracy": 1.0
+ },
+ "extraction": {
+  "evidence_accuracy": 1.0,
+  "locator_accuracy": 1.0,
+  "precision": 0.9861,
+  "recall": 1.0,
+  "rules_extracted": 122.0,
+  "unsupported_claim_rate": 0.0
+ },
+ "governance": {
+  "audit_completeness": 1.0,
+  "estimated_cost": 0.0,
+  "llm_calls": 0.0,
+  "provenance_accuracy": 1.0,
+  "run_completed": 1.0,
+  "trace_completeness": 1.0
+ },
+ "guardrails": {
+  "false_negative_rate": 0.0,
+  "injection_false_negative_rate": 0.0,
+  "injection_false_positive_rate": 0.0,
+  "pii_false_negative_rate": 0.0,
+  "pii_false_positive_rate": 0.0
+ },
+ "heuristics": {
+  "candidate_recall": 1.0,
+  "duplicate_recall": 1.0,
+  "duplicate_threshold_precision": 1.0,
+  "false_ranking_rate": 0.0,
+  "top1": 1.0
+ },
+ "llm": {
+  "citation_accuracy": 1.0,
+  "hallucination_block_rate": 1.0,
+  "reasoning_consistency": 1.0,
+  "structured_output_validity": 1.0,
+  "unsupported_claim_rate": 0.0
+ },
+ "mapping": {
+  "accuracy": 1.0,
+  "candidate_recall": 1.0,
+  "false_negatives": 0.0,
+  "false_positives": 0.0,
+  "transformation_accuracy": 1.0,
+  "unmapped_respected": 1.0
+ },
+ "reconciliation": {
+  "cause_attribution_accuracy": 1.0,
+  "cohort_precision": 1.0,
+  "cohort_recall": 1.0,
+  "conduct_detection": 1.0,
+  "duplicate_precision": 1.0,
+  "duplicate_recall": 1.0,
+  "false_breaks": 0.0,
+  "missed_breaks": 0.0,
+  "numerical_correctness": 1.0,
+  "root_cause_accuracy": 1.0
+ },
+ "retrieval": {
+  "precision": 1.0,
+  "recall": 1.0
+ }
+}

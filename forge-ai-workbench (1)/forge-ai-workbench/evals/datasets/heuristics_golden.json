@@ -1,0 +1,20 @@
+{
+  "description": "Ranking cases for the heuristic framework. Each case lists candidates; 'expected' must rank first and pass its threshold (or 'none' when nothing may pass).",
+  "name_match": [
+    {"phrase": "monthly administration charge", "candidates": ["ADMIN_FEE", "EXIT_FEE", "MONTHLY_PREMIUM"], "expected": "ADMIN_FEE"},
+    {"phrase": "age loading threshold", "candidates": ["AGE_LOAD_THRESHOLD", "AGE_LOAD_FACTOR", "HOLDER_AGE"], "expected": "AGE_LOAD_THRESHOLD"},
+    {"phrase": "exit fee", "candidates": ["EXIT_FEE", "ADMIN_FEE", "SURRENDER_VALUE"], "expected": "EXIT_FEE"},
+    {"phrase": "penalty rate", "candidates": ["PENALTY_RATE", "PENALTY_AMOUNT", "TERMINAL_RATE"], "expected": "PENALTY_RATE"},
+    {"phrase": "Monthly admin fee", "candidates": ["ADMIN_FEE", "MONTHLY_PREMIUM", "EXIT_FEE"], "expected": "ADMIN_FEE"},
+    {"phrase": "Base rate", "candidates": ["BASE_PREMIUM", "TERMINAL_RATE"], "expected": "none"},
+    {"phrase": "minimum surrender value", "candidates": ["MINIMUM_SURRENDER", "SURRENDER_VALUE", "PENALTY_RATE"], "expected": "MINIMUM_SURRENDER"}
+  ],
+  "duplicates": [
+    {"left": {"name": "John Smith", "dob": "1959-03-02", "postcode": "SW1A 1AA"}, "right": {"name": "Jon Smith", "dob": "1959-03-02", "postcode": "SW1A 1AA"}, "match": true},
+    {"left": {"name": "Alice Harper", "dob": "1990-04-12", "postcode": "LS1 4AP"}, "right": {"name": "Alicia Harper", "dob": "1990-04-12", "postcode": "LS1 4AP"}, "match": true},
+    {"left": {"name": "Brian Okafor", "dob": "1983-11-02", "postcode": "M1 2AB"}, "right": {"name": "Brian Okafor", "dob": "1983-11-02", "postcode": "M1 2AB"}, "match": true},
+    {"left": {"name": "John Smith", "dob": "1959-03-02", "postcode": "SW1A 1AA"}, "right": {"name": "John Smith", "dob": "1962-07-19", "postcode": "B3 3CD"}, "match": false},
+    {"left": {"name": "Carla Mendes", "dob": "1974-06-30", "postcode": "B3 3CD"}, "right": {"name": "Daniel Price", "dob": "1974-06-30", "postcode": "B3 3CD"}, "match": false},
+    {"left": {"name": "Ellen Brooks", "dob": "1967-09-09", "postcode": "EH1 1GH"}, "right": {"name": "Helen Brooks", "dob": "1967-09-09", "postcode": "G1 9QR"}, "match": false}
+  ]
+}

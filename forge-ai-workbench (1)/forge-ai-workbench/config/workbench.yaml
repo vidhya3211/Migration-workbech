@@ -1,0 +1,400 @@
+# AI Workbench - platform configuration.
+# Every value here can be overridden by environment variables (AIWB__SECTION__KEY=value).
+# Secrets never live in this file: they come from Key Vault / environment (see config/settings.py).
+
+environment: local            # local | eval | test | production
+
+storage:
+  # PostgreSQL only - knowledge core, extract staging, job queue and LangGraph checkpoints share one engine.
+  # Local: docker-compose `postgres` (pgvector image). Azure: Azure Database for PostgreSQL Flexible Server
+  # (DSN with credentials comes from Key Vault as AIWB_DATABASE_URL).
+  database_url: postgresql+psycopg://aiwb@localhost:5432/aiwb
+  pool_size: 10
+  max_overflow: 20
+  auto_migrate: true                              # production: false - migrations run as a release job
+  object_store: local                             # local | azure_blob
+  object_store_root: ./var/objects                # local backend: same container/key layout as Blob Storage
+  blob_account_url: ""                            # https://<account>.blob.core.windows.net (Managed Identity)
+  uploads_container: uploads
+  evidence_container: evidence
+  context_container: context
+
+retrieval:
+  semantic: false                                 # true in Azure: pgvector + Azure OpenAI embeddings
+  embedding_provider: azure_openai
+  embedding_endpoint: ""                          # https://<resource>.openai.azure.com
+  embedding_deployment: ""
+  embedding_api_version: "2024-10-21"
+  embedding_model: text-embedding-3-small
+  embedding_dimensions: 1536
+  min_similarity: 0.25
+  min_text_rank: 0.01
+  allow_external_embeddings: false
+
+ingestion:
+  max_zip_bytes: 6442450944                       # 6 GiB per bundle (2-4 GB expected)
+  max_files: 200000
+  max_uncompressed_bytes: 64424509440             # 60 GiB expanded
+  max_compression_ratio: 200
+  chunk_bytes: 16777216                           # 16 MiB upload blocks
+  stream_buffer_bytes: 1048576
+  copy_batch_rows: 50000
+  csv_delimiters: [",", "|", "	", ";"]
+  pii:
+    obfuscate_columns: [ni_number, national_insurance, email, phone, telephone, bank_account, sort_code]
+    classification_columns: [name, cust_name, full_name, dob, date_of_birth, birth, postcode, post_code, address]
+
+scale:
+  fanout_max_concurrency: 8
+  bulk_batch_size: 2000
+  read_batch_rows: 10000
+  profile_sample_rows: 50000
+  mapping_profile_sample: 5000
+  validation_distinct_cap: 1000000
+  entity_match_max_block: 50
+  cohort_record_refs: 200
+  cohort_evidence: 20
+  lineage_breaks_per_cluster: 50
+  gate_items_page: 500
+
+llm:
+  # offline | azure_foundry | openai | anthropic | gemini | scripted
+  # Keys come from Key Vault / the environment only: AIWB_LLM_API_KEY (Azure AI Foundry key, or use Managed Identity),
+  # OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY for the public providers (refused in production by default).
+  provider: offline
+  default_model: auto                # auto = first profile below whose provider matches llm.provider
+  models:
+    # Model ids and prices are configuration: check them against your provider's current model list and your
+    # contract price before relying on the cost dashboard.
+    workbench-reasoning:
+      provider: azure_foundry
+      deployment: ""                 # Azure deployment name, e.g. via AIWB__LLM__MODELS__WORKBENCH_REASONING__DEPLOYMENT
+      endpoint: ""
+      api_version: "2024-10-21"
+      temperature: 0.0
+      max_input_tokens: 64000
+      max_output_tokens: 2048
+      input_cost_per_1k: 0.0025
+      output_cost_per_1k: 0.0100
+      cached_cost_per_1k: 0.00125
+    workbench-openai:
+      provider: openai
+      deployment: gpt-4.1-mini       # OpenAI model id
+      endpoint: ""                   # blank = https://api.openai.com/v1 (set to a proxy / Headroom proxy if used)
+      temperature: 0.0
+      max_input_tokens: 64000
+      max_output_tokens: 2048
+      input_cost_per_1k: 0.0004
+      output_cost_per_1k: 0.0016
+      cached_cost_per_1k: 0.0001
+    workbench-anthropic:
+      provider: anthropic
+      deployment: claude-sonnet-5    # Anthropic model id
+      endpoint: ""                   # blank = https://api.anthropic.com
+      temperature: null              # provider default
+      max_input_tokens: 64000
+      max_output_tokens: 2048
+      input_cost_per_1k: 0.003
+      output_cost_per_1k: 0.015
+      cached_cost_per_1k: 0.0003
+    workbench-gemini:
+      provider: gemini
+      deployment: gemini-2.5-flash   # Gemini model id
+      endpoint: ""                   # blank = https://generativelanguage.googleapis.com/v1beta
+      temperature: 0.0
+      max_input_tokens: 64000
+      max_output_tokens: 2048
+      input_cost_per_1k: 0.0003
+      output_cost_per_1k: 0.0025
+      cached_cost_per_1k: 0.000075
+  timeout_seconds: 60
+  allow_external_providers: false   # never true in production without a data-protection approval
+  max_retries: 2
+  structured_output_retries: 1
+
+headroom:
+  mode: library                      # library | proxy | disabled
+  proxy_base_url: ""                 # self-hosted Headroom proxy inside the private network
+  kompress_model: disabled           # ML text compression off by default (no model download); SmartCrusher still runs
+  min_tokens_to_compress: 250
+  target_ratio: 0.5
+  production_optimization_enabled: false   # flipped only after compression-vs-quality evals pass (Phase 7)
+
+budgets:                              # per run
+  llm_calls: 200
+  input_tokens: 2000000
+  output_tokens: 200000
+  mcp_calls: 100
+  tool_calls: 5000
+  ats_branches: 5000
+  ats_depth: 8
+  execution_seconds: 3600
+  estimated_cost: 25.00
+
+ats:
+  max_depth: 6
+  max_branches: 400
+  max_children: 6
+  token_budget: 20000
+  time_budget_seconds: 20
+  model_call_budget: 5
+  confidence_threshold: 0.55
+  min_evidence: 1
+
+# Business judgement lives here, per project (a project's settings_overrides may replace any of it). Conditions
+# use one small language everywhere: {field: X, equals|in|not_in|gt|gte|lt|lte|before|after|present|starts_with: ...}
+# and {all: [...]} / {any: [...]}. Nothing in this section is specific to one client or product line.
+heuristics:
+  mapping:
+    accept_threshold: 0.55
+    ambiguity_margin: 0.08
+    weights: {name: 0.40, type: 0.20, length: 0.10, domain: 0.15, profile: 0.15}
+  duplicate:
+    threshold: 0.85                 # pair score that makes a match proposal
+    strong_score: 0.9               # strong vs ambiguous grade (orders the steward queue; decides nothing)
+    blocking: [[dob], [national_id], [surname, postcode]]   # roles; a block key must be fully present
+    nicknames: {}                   # e.g. {BILL: WILLIAM, PEGGY: MARGARET}
+    conflict_fields: []             # e.g. [CONSENT_MARKETING] - matched records that disagree are flagged
+  differential:
+    materiality_currency: GBP
+    real_book_rows: 200000          # distinct input combinations evaluated per difference (0 = off)
+    explain_max: 10
+    severity:                       # register ordering only - a named human may change it; findings never change
+      domain_weights: {}            # e.g. {annuity: 1.0, charges: 0.8, _default: 0.5}
+      type_weights: {}
+      component_weights: {}         # domain, type, relative_delta, input_share, records
+      population_scale: 4           # log10(records affected) at which the population term saturates
+  break_cluster:
+    min_cluster_size: 1
+    min_cohort: 25                  # systematic shift: at least this many breaks ...
+    max_dispersion: 0.35            # ... whose relative shift varies by at most this (median abs deviation / median)
+    max_signatures_per_field: 50    # beyond this, a field's exact signatures collapse into relative bands
+    material_band: 0.02             # +/- relative shift that separates material bands from small ones
+  reconciliation:
+    tolerances:                     # absolute floor OR relative basis points of the source value, whichever is larger
+      by_type: {}                   # e.g. {decimal: {absolute_floor: "0.01", relative_bp: 1}}
+      fields: {}                    # "ENTITY.FIELD" or "FIELD": {absolute_floor, relative_bp} (exact by default)
+    alignment: {}                   # "SOURCE_ENTITY->TARGET_ENTITY": {source_date: VAL_DATE, target_date: VAL_DATE}
+    scope: {}                       # SOURCE_ENTITY: [{field: STATUS, in: [L], reason: "lapsed - not migrated"}]
+    load_rejections: []             # [{entity: LOAD_REJECTS | path_contains: reject, key_field: KEY, reason_field: REASON}]
+    derived: []                     # [{name, target: {entity, key, date, field}, holdings: {entity, key, instrument, quantity, date?},
+                                    #   prices: {entity, instrument, date, price}, decimals: 2}] - value = sum(qty x price as of date)
+    cross_target: []                # [{name, left: {entity, key}, right: {entity, key}, fields: [[LEFT, RIGHT], ...]}]
+    controls: []                    # [{name, regime: CASS, left: {entity, sum: BALANCE, where: {...}, group_by: FUND},
+                                    #   right: {entity, sum: HOLDING, group_by: FUND} | {value: "123.45"}, tolerance: {...}}]
+  conduct:
+    materiality_bands:              # detriment per customer (GBP) -> band
+      - {band: low, min: 0}
+      - {band: medium, min: 25}
+      - {band: high, min: 250}
+    vulnerability: []               # [{when: {field: GONE_AWAY, equals: Y}, reason: gone away, via: {entity: POLICY, link_field: PARTY_ID}}]
+    vulnerability_uplift: {from: medium, to: high}
+    protected_rights: []            # [{name: guaranteed_rate, when: {field: GAR_IND, equals: Y}, target_field: POLICY.GAR_RATE,
+                                    #   materiality: high, duty_outcome: products-services, route: product-actuary}]
+    duty_outcomes: {}               # impact type or right name -> Consumer Duty outcome (defaults per impact type)
+    routing: []                     # [{elements_any: [...], impact_types: [...], route: queue-name}]
+  data_quality:
+    spike_share: 0.01               # one date value held by more than this share of records ...
+    spike_min_records: 20           # ... and at least this many records
+    spike_min_distinct: 10          # columns with fewer distinct dates (e.g. a valuation date) are not checked
+    stale_live: null                # {live_when: {...}, inactive_when: {...}} - feature of a default-date spike
+    era_columns: {}                 # ENTITY: DATE_COLUMN used to look for era-correlated gaps (else auto)
+    era_min_rate: 0.15
+    era_ratio: 4.0
+    era_min_support: 0.05
+    era_min_records: 30            # each side of the era cut needs at least this many records
+    relationships: []               # [{child: CONTRIB.MEMBER_ID, parent: MEMBER.MEMBER_ID}] - orphan detection
+    flag_cohorts: []                # [{name: claims in flight at cutover, when: {field: CLAIM_STATE, not_in: ["", N]}}]
+  dates:
+    slash_order: dmy                # how 01/02/2026 is written in this project's sources: dmy (1 Feb) or mdy (2 Jan)
+  coverage:
+    product_field: null             # source data column naming the product (e.g. PRODUCT_CODE) for the coverage matrix
+  change_data: []                   # CDC deltas: [{changes: {path_contains: ..}, base: {path_contains: ..}, key_field,
+                                    #   op_field, sequence_field, ops: {insert: I, update: U, delete: D}, old_prefix: OLD_}]
+  live_archive:
+    overrides: []                   # [{when: {field: CLAIM_STATE, not_in: ["", N]}, floor: 0.9, reason: claim in progress}]
+
+synonyms:                          # business vocabulary, used by the Normaliser + mapping heuristics
+  ADMIN_FEE: [ADMIN_CHARGE, ADMINISTRATION_FEE, ADMINISTRATION_CHARGE, ADM_FEE]
+  MONTHLY_PREMIUM: [MTHLY_PREM, MONTHLY_PREM]
+  SURRENDER_VALUE: [SURR_VALUE, CASH_VALUE]
+  MIN_SURRENDER: [MIN_SURRENDER_VALUE, MINIMUM_SURRENDER]
+  AGE_LOAD_THRESHOLD: [AGE_LOADING_AGE, AGE_LOAD_AGE]
+  AGE_LOAD_FACTOR: [AGE_LOADING, AGE_LOADING_FACTOR]
+  SMOKER_LOADING: [SMOKER_LOAD, SMOKER_FACTOR]
+  PENALTY_RATE: [SURRENDER_PENALTY_RATE]
+  EXIT_FEE: [EXIT_CHARGE, SURRENDER_FEE]
+  POLICY_NUMBER: [POL_NUMBER, POLICY_REF, POLICY_ID, POL_NO]
+  DATE_OF_BIRTH: [DOB, BIRTH_DT, PARTY_BIRTH_DT, BIRTH_DATE]
+  CUSTOMER_ID: [CUST_ID, PARTY_ID, CLIENT_ID]
+  CUSTOMER_NAME: [CUST_NAME, FULL_NAME, PARTY_NAME]
+  POSTCODE: [POST_CODE, POSTAL_CODE, ZIP]
+  STATUS: [STATUS_CODE, POL_STATUS]
+  START_DATE: [START_DT, COMMENCEMENT_DATE, INCEPTION_DATE]
+  PAY_FREQUENCY: [PAY_FREQ, PAYMENT_FREQUENCY]
+  SMOKER: [SMOKER_FLAG, IS_SMOKER]
+  CUSTOMER: [PARTY, CLIENT]
+
+token_synonyms:                    # token-level equivalences used by name heuristics only
+  ADMINISTRATION: ADMIN
+  CHARGE: FEE
+  LOADING: LOAD
+  CHARGES: FEE
+  FEES: FEE
+
+abbreviations:
+  POL: POLICY
+  CUST: CUSTOMER
+  DT: DATE
+  AMT: AMOUNT
+  FREQ: FREQUENCY
+  PREM: PREMIUM
+  SURR: SURRENDER
+  "NO": NUMBER
+  NUM: NUMBER
+  REF: REFERENCE
+  DISC: DISCOUNT
+  YRS: YEARS
+  ADM: ADMIN
+  MIN: MINIMUM
+
+domains:                           # canonical-name keyword -> business domain
+  PREMIUM: premium
+  FEE: charges
+  CHARGE: charges
+  LOADING: underwriting
+  LOAD: underwriting
+  SMOKER: underwriting
+  AGE: underwriting
+  SURRENDER: surrender
+  PENALTY: surrender
+  BONUS: bonus
+  DISCOUNT: premium
+  TERM: premium
+  RISK: underwriting
+  STATUS: policy_status
+
+root_causes:                       # known-cause catalogue for the Root-cause agent (T1)
+  - code: RC-LEGACY-DEFAULT
+    description: Legacy system wrote a default/sentinel value when the field was not captured
+    signatures: [null_mandatory, sentinel_value]
+  - code: RC-DATE-FORMAT
+    description: Date captured in a non-standard format by a legacy batch
+    signatures: [invalid_date]
+  - code: RC-CODE-DRIFT
+    description: Code value not in the certified domain; likely a retired or undocumented code
+    signatures: [invalid_code]
+  - code: RC-RANGE
+    description: Value outside the certified business range; likely a manual override
+    signatures: [out_of_range]
+  - code: RC-DUP-KEY
+    description: Duplicate business key created by a re-keying exercise
+    signatures: [duplicate_key]
+  - code: RC-CONVERSION-DEFAULT
+    description: A previous system conversion wrote a default value for records it could not populate
+    signatures: [default_value_spike]
+  - code: RC-NULL-CONVENTION
+    description: Different eras or systems marked "no value" differently (blank vs a sentinel)
+    signatures: [mixed_null_conventions]
+  - code: RC-ORPHAN
+    description: Parent record archived, deleted or re-keyed while its child records were kept
+    signatures: [orphan_reference]
+  - code: RC-ERA-CAPTURE
+    description: The field was not captured before a process or system change
+    signatures: [era_correlated_nulls]
+
+mcp:
+  servers:
+    git:
+      transport: inprocess          # inprocess | stdio | http
+      enabled: true
+      auth: none
+      tools:
+        git.read_file:
+          allowed_agents: [lineage_agent]
+          data_classification: internal
+          rate_limit_per_minute: 60
+          timeout_seconds: 10
+    devops:
+      transport: inprocess
+      enabled: true
+      auth: none
+      tools:
+        devops.create_work_item:
+          allowed_agents: [story_agent, case_routing_agent]
+          data_classification: internal
+          rate_limit_per_minute: 30
+          timeout_seconds: 10
+          requires_human_approval: true
+
+guardrails:
+  max_prompt_chars: 400000
+  block_on_pii_to_llm: true
+  injection_block_threshold: 0.6
+
+human_roles:                        # human gate -> the accountable role it represents (decisions are made by the
+  rule_adjudication: actuary_sme    # signed-in administrator acting in that role; recorded in the audit trail)
+  mapping_approval: data_steward
+  data_quality_review: data_steward
+  reconciliation_review: reconciliation_analyst
+  conduct_review: conduct_officer
+  go_no_go: migration_lead
+
+eval_gate:                         # release thresholds - no production deployment below these
+  extraction_precision: 0.90
+  extraction_recall: 0.85
+  locator_accuracy: 0.98
+  mapping_accuracy: 0.85
+  heuristic_top1: 0.80
+  ats_discovery_rate: 0.90
+  differential_recall: 1.00
+  reconciliation_accuracy: 1.00
+  provenance_accuracy: 1.00
+  unsupported_claim_rate_max: 0.00
+  guardrail_false_negative_rate_max: 0.05
+  retrieval_recall: 0.80
+  assistant_refusal_accuracy: 1.00
+  compression_quality_drop_max: 0.02
+  trace_completeness: 1.00
+  audit_completeness: 1.00
+
+auth:
+  mode: admin                       # admin (single administrator account) | entra (Entra ID, admin app role)
+  admin_username: admin             # password hash: AIWB_ADMIN_PASSWORD_HASH (Key Vault) - `python cli.py hash-password`
+  token_ttl_minutes: 480            # signing key: AIWB_AUTH_SIGNING_KEY (Key Vault)
+  max_failed_logins: 5
+  lockout_seconds: 300
+  entra_tenant_id: ""
+  entra_audience: ""
+  role_claim: roles
+  admin_app_role: Workbench.Admin
+
+jobs:
+  backend: postgres                 # postgres (SKIP LOCKED job table) | service_bus (Azure Service Bus + job table)
+  embedded_worker: true             # production: false - dedicated worker Container App scaled by KEDA
+  worker_concurrency: 2
+  poll_seconds: 1.0
+  lease_seconds: 120
+  heartbeat_seconds: 30
+  max_attempts: 3
+  service_bus_namespace: ""         # <namespace>.servicebus.windows.net (Managed Identity)
+  service_bus_queue: aiwb-jobs
+
+api:
+  cors_origins: ["http://localhost:5173", "http://127.0.0.1:5173"]   # the console origin(s)
+  default_page_size: 200
+  max_page_size: 1000
+  max_chunk_bytes: 67108864
+
+branding:
+  organisation_name: ""             # shown in the console header (e.g. the client organisation)
+  product_name: Migration Workbench
+  business_domains: [Policy, Claims, Finance, Customer, Distribution, Other]
+
+pipeline: default                   # config/pipelines/<name>.yaml - a project may choose another
+
+observability:
+  otel_enabled: false
+  service_name: ai-workbench
+  log_level: INFO
+  log_payloads: false               # sensitive payloads never logged by default

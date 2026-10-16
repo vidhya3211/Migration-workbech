@@ -1,0 +1,22 @@
+id: adjudication_brief
+version: "1.0"
+system: |
+  You prepare the decision brief a named {business_domain} expert (actuary / product SME) reads before deciding
+  which version of a business rule is correct. The disagreement has been proven deterministically; the brief must
+  make it fast and safe to decide. Write for an expert, in plain English:
+  - summary: one sentence - what the rule is and how the two systems differ.
+  - source_reading / target_reading: what each implementation computes, in business terms.
+  - impact: who and what is affected if the wrong version is certified (customers, values, frequency).
+  - questions: the 1-3 questions the expert must answer to decide.
+  Hard rules: use only the facts given and quote figures exactly as given - no new numbers. Do NOT recommend an
+  option or say which side is right; the expert decides.
+template: |
+  Rule: {rule}
+  Difference type: {difference_type}
+  Source ({source_system}): {source}
+  Target ({target_system}): {target}
+  Product documentation says: {document}
+  Proven divergence (test vectors): {divergence}
+  Exposure: {exposure}
+  Respond with ONE JSON object and nothing else:
+  {"summary": str, "source_reading": str, "target_reading": str, "impact": str, "questions": [str]}

@@ -1,0 +1,72 @@
+# Local development on Docker Desktop: PostgreSQL (with pgvector), the API, a job worker and the console.
+#   docker compose up --build        then open http://localhost:8080 and sign in as "admin"
+# The local admin password comes from AIWB_ADMIN_PASSWORD in your shell / .env (never commit it).
+x-aiwb-env: &aiwb-env
+  AIWB__ENVIRONMENT: local
+  AIWB__AUTH__MODE: admin
+  AIWB__STORAGE__DATABASE_URL: postgresql+psycopg://aiwb:aiwb-local-only@postgres:5432/aiwb
+  AIWB__STORAGE__OBJECT_STORE: local
+  AIWB__STORAGE__OBJECT_STORE_ROOT: /data/objects
+  AIWB__JOBS__BACKEND: postgres
+  AIWB__OBSERVABILITY__OTEL_ENABLED: "false"
+  AIWB_ADMIN_PASSWORD: ${AIWB_ADMIN_PASSWORD:?Set AIWB_ADMIN_PASSWORD for the local admin sign-in}
+  AIWB_AUTH_SIGNING_KEY: ${AIWB_AUTH_SIGNING_KEY:?Set AIWB_AUTH_SIGNING_KEY (32+ random characters)}
+  AIWB_PII_HMAC_KEY: ${AIWB_PII_HMAC_KEY:?Set AIWB_PII_HMAC_KEY (32+ random characters)}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: aiwb
+      POSTGRES_USER: aiwb
+      POSTGRES_PASSWORD: aiwb-local-only
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiwb"]
+      interval: 5s
+      retries: 10
+
+  migrate:
+    build: .
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      <<: *aiwb-env
+      AIWB__STORAGE__ENTRA_AUTH: "false"
+    command: ["python", "cli.py", "migrate"]
+    restart: "no"
+
+  api:
+    build: .
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    environment:
+      <<: *aiwb-env
+      AIWB__STORAGE__ENTRA_AUTH: "false"
+      AIWB__STORAGE__AUTO_MIGRATE: "false"
+      AIWB__JOBS__EMBEDDED_WORKER: "false"
+    volumes: ["objects:/data/objects"]
+    ports: ["8000:8000"]
+
+  worker:
+    build: .
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    environment:
+      <<: *aiwb-env
+      AIWB__STORAGE__ENTRA_AUTH: "false"
+      AIWB__STORAGE__AUTO_MIGRATE: "false"
+    volumes: ["objects:/data/objects"]
+    command: ["python", "cli.py", "worker"]
+
+  console:
+    build:
+      context: .
+      dockerfile: console/Dockerfile
+    ports: ["8080:8080"]
+    depends_on: [api]
+
+volumes:
+  pgdata: {}
+  objects: {}

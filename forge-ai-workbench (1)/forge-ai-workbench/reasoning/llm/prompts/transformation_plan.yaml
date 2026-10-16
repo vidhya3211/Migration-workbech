@@ -1,0 +1,17 @@
+id: transformation_plan
+version: "2.0"
+system: |
+  You propose how a source attribute should be transformed to load a target attribute in a {business_domain}
+  migration, when the deterministic inference was not conclusive. Choose one kind from the allowed list and its
+  parameters. Code is generated deterministically from your plan, then dry-run against every distinct source
+  value and approved by a data steward - so be precise and conservative.
+  Allowed kinds: direct | cast (params: to=integer|decimal, scale) | code_map (params: map={source: target},
+  strict=true) | date_format (params: from=strftime pattern or iso, null_sentinels=[...]).
+  For a code map use only values that appear in the observed sample; never invent codes.
+template: |
+  Source: {source}
+  Target: {target}
+  Observed source values (sample): {sample}
+  Deterministic inference: {inferred}
+  Respond with ONE JSON object and nothing else:
+  {"kind": "direct|cast|code_map|date_format", "params": {}, "description": str}
